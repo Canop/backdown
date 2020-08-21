@@ -13,7 +13,7 @@ fn main() -> Result<()> {
     }
     let root = &args[1];
     println!("root: {:?}", root);
-    let mut dup_map = DupMap::build(root.into())?;
+    let dup_map = DupMap::build(root.into())?;
     dbg!(dup_map.len());
     for dup in dup_map.dups.values() {
         for path in &dup.paths {

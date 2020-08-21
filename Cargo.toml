@@ -5,6 +5,8 @@ authors = ["Canop <cano.petrole@gmail.com>"]
 edition = "2018"
 description = "nothing yet"
 repository = "https://github.com/Canop/backdown"
+license = "MIT"
+readme = "README.md"
 
 
 [dependencies]
