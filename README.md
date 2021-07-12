@@ -7,7 +7,7 @@ Its design is based upon my observation of frequent patterns regarding buil-up o
 A Backdown session goes through the following phases:
 
 1. Backdown analyzes the directory of your choice and find sets of duplicates (files whose content is exactly the same). Backdown ignores symlinks and files or directories whose name starts with a dot.
-2. Backdown asks you a few question depending on the analysis. Nothing is removed at this point: you only stage files for removal. Backdown never lets you stage all items in a set of identical files
+2. Backdown asks you a few questions depending on the analysis. Nothing is removed at this point: you only stage files for removal. Backdown never lets you stage all items in a set of identical files
 3. After having maybe looked at the list of staged files, you confirm the removals
 4. Backdown does the removals on disk
 
