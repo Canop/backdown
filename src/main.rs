@@ -15,7 +15,7 @@ fn main() -> Result<()> {
     let root = args.path
         .unwrap_or_else(|| std::env::current_dir().unwrap());
     let skin = make_skin();
-    skin.print_text("\n# Step 1) Analysis");
+    skin.print_text("\n# Phase 1) Analysis");
     mad_print_inline!(skin, "Analyzing directory *$0*...\n", root.to_string_lossy());
     let dup_report = DupReport::build(root, args.only_images)?;
     dup_report.print_summary(&skin);
@@ -24,12 +24,12 @@ fn main() -> Result<()> {
         return Ok(());
     }
     let dirs_report = DirsReport::compute(&dup_report.dups)?;
-    skin.print_text("\n# Step 2) Staging: choose files to remove");
+    skin.print_text("\n# Phase 2) Staging: choose files to remove");
     let rr = ask_on_dirs(&dirs_report, &dup_report.dups, &skin)?;
     if rr.is_empty() || rr.quit {
         return Ok(());
     }
-    skin.print_text("\n# Step 3) review and confirm removals");
+    skin.print_text("\n# Phase 3) Review and confirm removals");
     loop {
         ask!(&skin, "What do you want to do now?", {
             ('s', "Review touched **s**ets of identical files") => {

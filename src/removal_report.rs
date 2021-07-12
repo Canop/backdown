@@ -128,6 +128,7 @@ impl<'d> RemovalReport<'d> {
         skin: &MadSkin,
     ) -> anyhow::Result<()> {
         self.check_no_emptied_set(dups)?;
+        skin.print_text("\n# Phase 4) Removal");
         println!("Removing...");
         let mut removed_len = 0;
         let mut removed_count = 0;

@@ -1,6 +1,6 @@
 [package]
 name = "backdown"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Canop <cano.petrole@gmail.com>"]
 edition = "2018"
 description = "nothing yet"
