@@ -64,7 +64,7 @@ impl<'d> RemovalReport<'d> {
         static MD: &str = r#"
         |:-|:-|
         |Set #*${set_num}* : each file is **${file_len}**|action|
-        |-:|:-:|
+        |:-|:-:|
         ${files
         |${path}|**${action}**|
         }

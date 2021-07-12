@@ -14,7 +14,7 @@ pub fn ask_on_dirs<'d>(
 ) -> anyhow::Result<RemovalReport<'d>> {
     let mut rr = RemovalReport::default();
     let mut question_idx = 0;
-    let questions = dirs_report.brotherhoods.len() + dirs_report.dir_pairs.len();
+    let questions = dirs_report.dup_dirs.len() + dirs_report.brotherhoods.len() + dirs_report.dir_pairs.len();
     static MD: &str = r#"
     I'll now ask you up to *${questions}* questions to determine what files should be removed.\
     No file will be removed until you have the possibility to review them after the staging step.\
