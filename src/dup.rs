@@ -1,4 +1,5 @@
 use {
+    lazy_regex::*,
     std::path::{Path, PathBuf},
 };
 
@@ -45,4 +46,59 @@ impl DupFileRef {
                 |n| n.to_string_lossy().to_string()
             )
     }
+    /// get the file name when the file has a name like "thing (3).jpg"
+    /// or "thing (3rd copy).png"
+    pub fn copy_name(self, dups:&[DupSet]) -> Option<&str> {
+        copy_name(self.path(dups))
+    }
+    /// tells whether the file has a name like "thing (3).jpg"
+    /// or "thing (3rd copy).png"
+    pub fn is_copy_named(self, dups:&[DupSet]) -> bool {
+        self.copy_name(dups).is_some()
+    }
+}
+
+/// get the name if this path is of a "copy" file, that is an usual name for a copy
+pub fn copy_name(path: &Path) -> Option<&str> {
+    path
+        .file_name()
+        .and_then(std::ffi::OsStr::to_str)
+        .filter(|n| regex_is_match!(r#"(?x)
+            .+
+            \((
+                \d+
+            |
+                [^)]*
+                copy
+            )\)
+            (\.\w+)?
+            $
+        "#, n))
+}
+
+#[test]
+fn test_is_copy_named() {
+    use std::path::PathBuf;
+    let copies = &[
+        "/some/path/to/bla (3).jpg",
+        "bla (3455).jpg",
+        "uuuuu (copy).rs",
+        "/home/dys/Images/pink hexapodes (another copy).jpeg",
+        "~/uuuuu (copy)",
+        "uuuuu (3rd copy)",
+    ];
+    for s in copies {
+        assert!(copy_name(&PathBuf::from(s)).is_some());
+    }
+    let not_copies = &[
+        "copy",
+        "copy.txt",
+        "bla.png",
+        "/home/dys/not a copy",
+        "(don't copy)",
+    ];
+    for s in not_copies {
+        assert!(copy_name(&PathBuf::from(s)).is_none());
+    }
+
 }

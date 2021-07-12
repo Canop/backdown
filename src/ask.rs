@@ -14,7 +14,12 @@ pub fn ask_on_dirs<'d>(
 ) -> anyhow::Result<RemovalReport<'d>> {
     let mut rr = RemovalReport::default();
     let mut question_idx = 0;
-    let questions = dirs_report.dup_dirs.len() + dirs_report.brotherhoods.len() + dirs_report.dir_pairs.len();
+    let mut questions = dirs_report.dup_dirs.len() + dirs_report.brotherhoods.len() + dirs_report.dir_pairs.len();
+    let ask_about_autosolve = dirs_report.auto_solvable_brotherhoods_count > 1;
+    if ask_about_autosolve {
+        questions += 1;
+    }
+
     static MD: &str = r#"
     I'll now ask you up to *${questions}* questions to determine what files should be removed.\
     No file will be removed until you have the possibility to review them after the staging step.\
@@ -24,6 +29,7 @@ pub fn ask_on_dirs<'d>(
     let mut expander = OwningTemplateExpander::new();
     expander.set("questions", questions);
     skin.print_owning_expander(&expander, &TextTemplate::from(MD));
+
     // return true if break
     let check = |rr: &RemovalReport| {
         if rr.quit {
@@ -37,6 +43,23 @@ pub fn ask_on_dirs<'d>(
         );
         rr.broken
     };
+
+    let skip_auto_solvable_brotherhoods = ask_about_autosolve && {
+        let solved = ask_auto_solve(
+            question_idx,
+            questions,
+            dirs_report,
+            dups,
+            skin,
+            &mut rr,
+        )?;
+        if check(&rr) {
+            return Ok(rr);
+        }
+        question_idx += 1;
+        solved
+    };
+
     for dup_dir in &dirs_report.dup_dirs {
         ask_on_dup_dir(
             question_idx,
@@ -54,11 +77,34 @@ pub fn ask_on_dirs<'d>(
     if rr.broken || rr.quit {
         return Ok(rr);
     }
+
     for brotherhood in &dirs_report.brotherhoods {
-        ask_on_brotherhood(
+        if skip_auto_solvable_brotherhoods && brotherhood.is_auto_solvable {
+            mad_print_inline!(skin, "skipping question *$0*\n", question_idx);
+        } else {
+            ask_on_brotherhood(
+                question_idx,
+                questions,
+                brotherhood,
+                dups,
+                skin,
+                &mut rr,
+            )?;
+            if check(&rr) {
+                break;
+            }
+        }
+        question_idx += 1;
+    }
+    if rr.broken || rr.quit {
+        return Ok(rr);
+    }
+
+    for dir_pair in &dirs_report.dir_pairs {
+        ask_on_dir_pair(
             question_idx,
             questions,
-            brotherhood,
+            dir_pair,
             dups,
             skin,
             &mut rr,
@@ -68,24 +114,78 @@ pub fn ask_on_dirs<'d>(
         }
         question_idx += 1;
     }
-    if rr.broken || rr.quit {
-        return Ok(rr);
-    }
-    for dir_pair in &dirs_report.dir_pairs {
-        ask_on_dir_pair(
-            question_idx,
-            questions,
-            dir_pair,
-            dups,
-            skin,
-            &mut rr,
-        );
-        if check(&rr) {
-            break;
-        }
-        question_idx += 1;
-    }
+
     Ok(rr)
+}
+
+static MD_AUTO_SOLVE: &str = r#"
+
+## Staging Question **${num}**/${questions}
+You have several duplicates with "copy" names in the same directory than their identical "source" (for example *${example_1}* and *${example_2}*).
+I can automatically stage those **${file_count}** duplicates, which would let you gain **${size}**.
+If you accept, you'll skip *${skippable_questions}* questions.
+"#;
+
+/// return whether auto solvable brotherhoods are solved (we'll skip their questions then)
+fn ask_auto_solve<'d>(
+    question_idx: usize,
+    questions: usize,
+    dirs_report: &'d DirsReport,
+    dups: &'d [DupSet],
+    skin: &MadSkin,
+    rr: &mut RemovalReport<'d>,
+) -> anyhow::Result<bool> {
+    debug_assert!(question_idx == 0);
+    let mut removable_count = 0;
+    let mut removable_len = 0;
+    let mut skippable_questions = 0;
+    let mut example_names = Vec::new();
+    for brotherhood in dirs_report.brotherhoods.iter().filter(|b| b.is_auto_solvable) {
+        removable_count += brotherhood.files.len() - 1;
+        removable_len += (brotherhood.files.len() - 1) as u64 * dups[brotherhood.dup_set_idx].file_len;
+        skippable_questions += 1;
+        if example_names.len() < 2 {
+            example_names.push(
+                brotherhood.files.iter()
+                    .map(|&dup_file_idx| DupFileRef {
+                        dup_set_idx: brotherhood.dup_set_idx,
+                        dup_file_idx,
+                    })
+                    .filter_map(|dup_file_ref| dup_file_ref.copy_name(dups))
+                    .next()
+                    .unwrap() // SAFETY: it's not auto solvable if there's no copy named file
+            );
+        }
+    }
+    let mut expander = OwningTemplateExpander::new();
+    expander
+        .set("num", question_idx + 1)
+        .set("questions", questions)
+        .set("example_1", example_names[0])
+        .set("example_2", example_names[1])
+        .set("skippable_questions", skippable_questions)
+        .set("file_count", removable_count)
+        .set("size", file_size::fit_4(removable_len));
+    skin.print_owning_expander(&expander, &TextTemplate::from(MD_AUTO_SOLVE));
+    Ok(ask!(skin, "Do you want me to automatically stage those copies ?", ('y') {
+        ('y', "yes") => {
+            for brotherhood in dirs_report.brotherhoods.iter().filter(|b| b.is_auto_solvable) {
+                let dup_file_refs = brotherhood.files.iter()
+                    .map(|&dup_file_idx| DupFileRef {
+                        dup_set_idx: brotherhood.dup_set_idx,
+                        dup_file_idx,
+                    })
+                    .filter(|dup_file_ref| dup_file_ref.is_copy_named(dups));
+                for dup_file_ref in dup_file_refs {
+                    rr.stage_file(dup_file_ref, dups);
+                }
+            }
+            true
+        }
+        ('n', "no") => {
+            false
+        }
+    }))
 }
 
 static MD_DUP_DIR: &str = r#"
@@ -122,7 +222,7 @@ fn ask_on_dup_dir<'d>(
             })
             .count();
         if not_here_or_staged_count == 0 {
-            println!("dup_set would be removed -> skipping");
+            // dup_set would be removed -> skipping
             return Ok(());
         }
     }
@@ -167,6 +267,7 @@ fn ask_on_brotherhood(
     rr: &mut RemovalReport,
 ) -> anyhow::Result<()> {
     // we check nothing because questions for brotherhoods come before the other ones
+    // FIXME we must check it's not autosolved!
     let dup_set = &dups[brotherhood.dup_set_idx];
     let mut expander = OwningTemplateExpander::new();
     expander
@@ -181,7 +282,7 @@ fn ask_on_brotherhood(
         let file_name = &dup_set.files[f].path.file_name().unwrap();
         q.add_answer(
             i+1,
-            format!("keep {:?} and stage other one(s) for removal", file_name),
+            format!("keep *{}* and stage other one(s) for removal", file_name.to_string_lossy()),
         );
     }
     q.add_answer('s', "**S**kip and go to next question");
@@ -235,7 +336,7 @@ fn ask_on_dir_pair(
     dups: &[DupSet],
     skin: &MadSkin,
     rr: &mut RemovalReport,
-) {
+) -> anyhow::Result<()> {
     // we must recount now because files may have been already
     // staged for removals
     let (mut removed_left_count, mut removed_right_count) = (0, 0);
@@ -261,21 +362,21 @@ fn ask_on_dir_pair(
         }
     }
     if removable_pairs.is_empty() {
-        mad_print_inline!(skin, "*skipping question because of previously staged removals*");
-        return;
+        mad_print_inline!(skin, "*skipping question because of previously staged removals*\n");
+        return Ok(());
     }
-    let left_other_count = dir_pair.key.left_dir
-        .read_dir()
-        .map_or_else(
-            |_| "?".to_string(),
-            |i| (i.count() - removed_left_count - removable_left_count).to_string(),
-        );
-    let right_other_count = dir_pair.key.right_dir
-        .read_dir()
-        .map_or_else(
-            |_| "?".to_string(),
-            |i| (i.count() - removed_right_count - removable_right_count).to_string(),
-        );
+    let left_dir_count = dir_pair.key.left_dir.read_dir()?.count();
+    if left_dir_count < removed_left_count + removable_left_count {
+        println!("skipping question because some files were removed on disk");
+        return Ok(());
+    }
+    let left_other_count = left_dir_count  - removed_left_count - removable_left_count;
+    let right_dir_count = dir_pair.key.right_dir.read_dir()?.count();
+    if right_dir_count < removed_right_count + removable_right_count {
+        println!("skipping question because some files were removed on disk");
+        return Ok(());
+    }
+    let right_other_count = right_dir_count  - removed_right_count - removable_right_count;
     let mut expander = OwningTemplateExpander::new();
     expander
         .set("num", question_idx + 1)
@@ -317,6 +418,6 @@ fn ask_on_dir_pair(
             rr.broken = true;
         }
     });
-
+    Ok(())
 }
 

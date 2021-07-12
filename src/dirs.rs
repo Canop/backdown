@@ -7,6 +7,14 @@ use {
     },
 };
 
+#[derive(Debug)]
+pub struct DirsReport<'d> {
+    pub dup_dirs: Vec<DupDir<'d>>,
+    pub brotherhoods: Vec<Brotherhood<'d>>,
+    pub auto_solvable_brotherhoods_count: usize,
+    pub dir_pairs: Vec<DirPair<'d>>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DirPairKey<'d> {
     pub left_dir: &'d Path,
@@ -22,9 +30,19 @@ pub struct DirPair<'d> {
 /// a brotherhood gather duplicates having the same parent
 #[derive(Debug)]
 pub struct Brotherhood<'d> {
+
     pub parent: &'d Path,
+
     pub dup_set_idx: usize,
-    pub files: Vec<usize>, // file indexes
+
+    /// file indexes
+    pub files: Vec<usize>,
+
+    /// when all files have names like "thing (copy).png", "thing (another copy).png", etc.
+    /// except one file, we can propose an automated resolution.
+    /// Note that we don't check the start of filenames are identical because we
+    /// don't, in fact, care.
+    pub is_auto_solvable: bool,
 }
 
 /// a directory which contains only duplicates
@@ -32,13 +50,6 @@ pub struct Brotherhood<'d> {
 pub struct DupDir<'d> {
     pub path: &'d Path,
     pub files: Vec<DupFileRef>,
-}
-
-#[derive(Debug)]
-pub struct DirsReport<'d> {
-    pub dup_dirs: Vec<DupDir<'d>>,
-    pub brotherhoods: Vec<Brotherhood<'d>>,
-    pub dir_pairs: Vec<DirPair<'d>>,
 }
 
 impl<'d> Brotherhood<'d> {
@@ -86,10 +97,12 @@ impl<'d> DirPair<'d> {
 impl<'d> DirsReport<'d> {
     pub fn compute(dups: &'d[DupSet]) -> anyhow::Result<Self> {
         let mut brotherhoods = Vec::new();
+        let mut auto_solvable_brotherhoods_count = 0;
         let mut dp_map: FnvHashMap<DirPairKey, Vec<FilePair>> = FnvHashMap::default();
         let mut dir_map: FnvHashMap<&Path, Vec<DupFileRef>> = FnvHashMap::default();
+        let mut brotherhood_per_parent: FnvHashMap<&Path, Brotherhood<'d>> = FnvHashMap::default();
         for (dup_set_idx, dup) in dups.iter().enumerate() {
-            let mut brotherhood: Option<Brotherhood<'d>> = None;
+            brotherhood_per_parent.clear();
             for (left_file_idx, a) in dup.files.iter().enumerate() {
                 let a_parent = a.path.parent().unwrap();
                 // adding to the dir_map
@@ -100,17 +113,20 @@ impl<'d> DirsReport<'d> {
                 // building dir pair
                 for right_file_idx in left_file_idx+1..dup.files.len() {
                     let b = &dup.files[right_file_idx];
+                    let b_parent = b.path.parent().unwrap();
                     let dpk = DirPairKey::new(
                         a_parent,
-                        b.path.parent().unwrap(),
+                        b_parent,
                     );
                     if dpk.left_dir == dpk.right_dir {
                         // brotherhood
-                        brotherhood
-                            .get_or_insert_with(|| Brotherhood {
+                        brotherhood_per_parent
+                            .entry(dpk.left_dir)
+                            .or_insert_with(|| Brotherhood {
                                 parent: dpk.left_dir,
                                 dup_set_idx,
                                 files: Vec::new(),
+                                is_auto_solvable: false,
                             })
                             .maybe_add_files(left_file_idx, right_file_idx);
                     } else {
@@ -125,7 +141,19 @@ impl<'d> DirsReport<'d> {
                     }
                 }
             }
-            if let Some(brotherhood) = brotherhood {
+            for (_, mut brotherhood) in brotherhood_per_parent.drain() {
+                let copy_count = brotherhood.files
+                    .iter()
+                    .map(|&dup_file_idx| DupFileRef {
+                        dup_set_idx: brotherhood.dup_set_idx,
+                        dup_file_idx,
+                    })
+                    .filter(|dup_file_ref| dup_file_ref.is_copy_named(dups))
+                    .count();
+                if copy_count + 1 == brotherhood.files.len() {
+                    brotherhood.is_auto_solvable = true;
+                    auto_solvable_brotherhoods_count += 1;
+                }
                 brotherhoods.push(brotherhood);
             }
         }
@@ -161,6 +189,7 @@ impl<'d> DirsReport<'d> {
         Ok(Self {
             dup_dirs,
             brotherhoods,
+            auto_solvable_brotherhoods_count,
             dir_pairs,
         })
     }

@@ -1,6 +1,6 @@
 [package]
 name = "backdown"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Canop <cano.petrole@gmail.com>"]
 edition = "2018"
 description = "nothing yet"
@@ -16,6 +16,7 @@ crossbeam = "0.7"
 crossterm = "0.20.0"
 file-size = "1.0"
 fnv = "1.0.7"
+lazy-regex = "2.2"
 minimad = "0.8.0"
 phf = { version = "0.8", features = ["macros"] }
 rayon = "1.3"
