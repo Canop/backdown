@@ -39,7 +39,11 @@ Review and Confirm:
 
 You must have the Rust env installed: https://rustup.rs
 
-Run `cargo install backdown`
+Run
+
+```bash
+cargo install backdown
+```
 
 ## From Source
 
@@ -47,7 +51,9 @@ You must have the Rust env installed: https://rustup.rs
 
 Download this repository then run
 
-`cargo install .`
+```bash
+cargo install --path .
+```
 
 ## Precompiled binaries
 
