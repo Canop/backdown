@@ -2,7 +2,7 @@
 
 **Backdown** helps you safely and ergonomically remove duplicate files.
 
-Its design is based upon my observation of frequent patterns regarding build-up of duplicates with time, espacially images and other media files.
+Its design is based upon my observation of frequent patterns regarding build-up of duplicates with time, especially images and other media files.
 
 A Backdown session goes through the following phases:
 
