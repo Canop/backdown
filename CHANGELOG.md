@@ -1,5 +1,7 @@
-### next
+<a name="v0.2.1"></a>
+### v0.2.1 - 2021-07-14
 - backdown logs a few things. To have log generated launch backdown with `BACKDOWN_LOG=debug backdown your/dir`
+- change hash algorithm from SHA-256 to BLAKE3, which is slightly faster with same guarantees
 
 <a name="v0.2.0"></a>
 ### v0.2.0 - 2021-07-12

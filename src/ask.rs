@@ -168,7 +168,7 @@ fn ask_auto_solve<'d>(
         .set("size", file_size::fit_4(removable_len));
     skin.print_owning_expander(&expander, &TextTemplate::from(MD_AUTO_SOLVE));
     Ok(ask!(skin, "Do you want me to automatically stage those copies ?", ('y') {
-        ('y', "yes") => {
+        ('y', "**Y**es") => {
             for brotherhood in dirs_report.brotherhoods.iter().filter(|b| b.is_auto_solvable) {
                 let dup_file_refs = brotherhood.files.iter()
                     .map(|&dup_file_idx| DupFileRef {
@@ -182,7 +182,11 @@ fn ask_auto_solve<'d>(
             }
             true
         }
-        ('n', "no") => {
+        ('n', "**N**o") => {
+            false
+        }
+        ('e', "**E**nd staging and quit") => {
+            rr.quit = true;
             false
         }
     }))
