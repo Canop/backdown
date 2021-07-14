@@ -1,3 +1,5 @@
+### next
+- backdown logs a few things. To have log generated launch backdown with `BACKDOWN_LOG=debug backdown your/dir`
 
 <a name="v0.2.0"></a>
 ### v0.2.0 - 2021-07-12

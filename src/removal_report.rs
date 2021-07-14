@@ -152,6 +152,7 @@ impl<'d> RemovalReport<'d> {
         }
         // directory removals
         for path in &self.staged_dir_removals {
+            debug!("removing {:?}", path);
             if let Err(e) = fs::remove_dir(path) {
                 mad_print_inline!(
                     skin,

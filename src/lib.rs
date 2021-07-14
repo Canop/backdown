@@ -1,3 +1,5 @@
+#[macro_use] extern crate cli_log;
+
 pub mod args;
 pub mod ask;
 pub mod dirs;

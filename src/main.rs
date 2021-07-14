@@ -1,3 +1,5 @@
+#[macro_use] extern crate cli_log;
+
 use {
     backdown::*,
     anyhow::Result,
@@ -6,7 +8,7 @@ use {
     termimad::*,
 };
 
-fn main() -> Result<()> {
+fn run_app() -> Result<()> {
     let args: Args = argh::from_env();
     if args.version {
         println!("backdown {}", env!("CARGO_PKG_VERSION"));
@@ -15,15 +17,24 @@ fn main() -> Result<()> {
     let root = args.path
         .unwrap_or_else(|| std::env::current_dir().unwrap());
     let skin = make_skin();
+    info!("root: {:?}", &root);
     skin.print_text("\n# Phase 1) Analysis");
     mad_print_inline!(skin, "Analyzing directory *$0*...\n", root.to_string_lossy());
-    let dup_report = DupReport::build(root, args.only_images)?;
+    let dup_report = time!(
+        Info,
+        "computing dup sets",
+        DupReport::build(root, args.only_images)?,
+    );
     dup_report.print_summary(&skin);
     if dup_report.is_empty() {
         println!("There's nothing to remove");
         return Ok(());
     }
-    let dirs_report = DirsReport::compute(&dup_report.dups)?;
+    let dirs_report = time!(
+        Info,
+        "computing dirs report",
+        DirsReport::compute(&dup_report.dups)?,
+    );
     skin.print_text("\n# Phase 2) Staging: choose files to remove");
     let rr = ask_on_dirs(&dirs_report, &dup_report.dups, &skin)?;
     if rr.is_empty() || rr.quit {
@@ -48,6 +59,14 @@ fn main() -> Result<()> {
         });
     }
     Ok(())
+}
+
+fn main() {
+    init_cli_log!();
+    if let Err(e) = run_app() {
+        eprintln!("{}", e);
+    }
+    info!("bye");
 }
 
 fn make_skin() -> MadSkin {
