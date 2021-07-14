@@ -80,6 +80,6 @@ backdown -i /some/directory
 
 * If you launch backdown on a big directory, it may find more duplicates you suspect there are. Don't force yourself to answer *all* questions at first: if you stage the removals of the first dozen questions you'll gain already a lot and you may do the other ones another day
 * Don't launch backdown at the root of your disk because you don't want to try and deal with duplicates in system resources, programs, build artefacts, etc. Launch backdown where you store your images, or your videos or musics
-* Backdown isn't designed for source code and doesn't respect .gitignore rules
+* Backdown isn't designed for dev directories and doesn't respect .gitignore rules
 * If you launch backdown in a directory with millions files on a slow disk, you'll have to wait a long time while the content is hashed. Try with a smaller directory first if you have an HDD
 * If you're only interested in images, use the -i option
