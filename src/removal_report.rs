@@ -38,7 +38,7 @@ impl<'d> RemovalReport<'d> {
         skin: &MadSkin,
     ) {
         mad_print_inline!(
-            &skin,
+            skin,
             "**$0** files planned for removal for a total size of **$1**:\n",
             self.staged_removals.len(),
             file_size::fit_4(self.len_to_remove),
@@ -47,7 +47,7 @@ impl<'d> RemovalReport<'d> {
             let path = file_ref.path(dups);
             let size = dups[file_ref.dup_set_idx].file_len;
             mad_print_inline!(
-                &skin,
+                skin,
                 "#$0 : *$1* (**$2**)\n",
                 idx + 1,
                 path.to_string_lossy(),

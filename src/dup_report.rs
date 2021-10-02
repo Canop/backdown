@@ -62,7 +62,7 @@ impl DupReport {
                                         Some(s) => s,
                                         None => { continue; },
                                     };
-                                    if !ext::is_image(&ext) {
+                                    if !ext::is_image(ext) {
                                         continue;
                                     }
                                 }

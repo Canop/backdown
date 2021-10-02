@@ -74,7 +74,7 @@ impl<'d> Brotherhood<'d> {
 
 impl<'d> DirPairKey<'d> {
     pub fn new(a: &'d Path, b: &'d Path) -> Self {
-        if a.cmp(&b) == Ordering::Less {
+        if a.cmp(b) == Ordering::Less {
             DirPairKey {
                 left_dir: a,
                 right_dir: b,
