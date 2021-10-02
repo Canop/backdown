@@ -1,3 +1,7 @@
+<a name="v1.0.0"></a>
+### v1.0.0 - 2021-10-02
+No reason not to call this a 1.0
+
 <a name="v0.2.1"></a>
 ### v0.2.1 - 2021-07-14
 - backdown logs a few things. To have log generated launch backdown with `BACKDOWN_LOG=debug backdown your/dir`
