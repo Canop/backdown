@@ -4,7 +4,6 @@ use {
     backdown::*,
     anyhow::Result,
     crossterm::style::{Attribute::*, Color::*},
-    minimad::*,
     termimad::*,
 };
 
