@@ -1,3 +1,6 @@
+### next
+- option to write the report in a JSON file after staging phase
+
 <a name="v1.0.0"></a>
 ### v1.0.0 - 2021-10-02
 No reason not to call this a 1.0

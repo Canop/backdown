@@ -5,9 +5,10 @@ pub mod ask;
 pub mod dirs;
 pub mod dup;
 pub mod dup_report;
-pub mod file_pair;
 pub mod ext;
+pub mod file_pair;
 pub mod hash;
+mod json;
 pub mod removal_report;
 
 pub use {
@@ -19,5 +20,6 @@ pub use {
     file_pair::*,
     ext::*,
     hash::*,
+    json::*,
     removal_report::*,
 };

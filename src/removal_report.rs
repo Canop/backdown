@@ -1,8 +1,9 @@
 use {
     crate::*,
     minimad::*,
+    serde_json::{json, Value},
     std::{
-        collections::HashSet,
+        collections::{HashMap, HashSet},
         fs,
         path::Path,
     },
@@ -21,6 +22,7 @@ pub struct RemovalReport<'d> {
 
 
 impl<'d> RemovalReport<'d> {
+
     pub fn stage_file(&mut self, dup_file_ref: DupFileRef, dups: &[DupSet]) {
         self.len_to_remove += dups[dup_file_ref.dup_set_idx].file_len;
         self.dup_sets_with_staged.insert(dup_file_ref.dup_set_idx);
@@ -54,6 +56,39 @@ impl<'d> RemovalReport<'d> {
                 file_size::fit_4(size),
             );
         }
+    }
+
+    /// write the report as a JSON file
+    pub fn dup_sets_as_json(
+        &self,
+        dups: &[DupSet],
+    ) -> Value {
+        json!({
+            "len_to_remove": self.len_to_remove,
+            "dup_sets": dups.iter().enumerate()
+                .filter_map(|(dup_set_idx, dup_set)| {
+                    if !self.dup_sets_with_staged.contains(&dup_set_idx) {
+                        return None;
+                    }
+                    Some(json!({
+                        "file_len": dup_set.file_len,
+                        "files": dup_set.files.iter()
+                            .enumerate()
+                            .map(|(dup_file_idx, file)| {
+                                let file = file.path.to_string_lossy().to_string();
+                                let file_ref = DupFileRef { dup_set_idx, dup_file_idx };
+                                let action = if self.staged_removals.contains(&file_ref) {
+                                    "remove"
+                                } else {
+                                    "keep"
+                                };
+                                (file, action)
+                            })
+                            .collect::<HashMap<String, &'static str>>()
+                    }))
+                })
+                .collect::<Vec<Value>>(),
+        })
     }
 
     pub fn list_dup_sets(

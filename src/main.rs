@@ -40,22 +40,41 @@ fn run_app() -> Result<()> {
         return Ok(());
     }
     skin.print_text("\n# Phase 3) Review and confirm removals");
+    let mut exported = false;
     loop {
-        ask!(&skin, "What do you want to do now?", {
-            ('s', "Review touched **s**ets of identical files") => {
+        let mut question = Question::new("What do you want to do now?");
+        question.add_answer('s', "Review touched **s**ets of identical files");
+        if !exported {
+            question.add_answer(
+                'j',
+                "Export touched sets of identical files in a **J**SON file",
+            );
+        }
+        question.add_answer('f', "Review all **f**iles staged for removal");
+        question.add_answer('r', "Do the **r**emovals now");
+        question.add_answer('q', "**Q**uit *backdown*, removing nothing");
+        match question.ask(&skin)?.as_ref() {
+            "s" => {
                 rr.list_dup_sets(&dup_report.dups, &skin);
             }
-            ('f', "Review all **f**iles staged for removal") => {
+            "j" => {
+                let value = rr.dup_sets_as_json(&dup_report.dups);
+                let path = write_in_file("backdown-report", &value)?;
+                mad_print_inline!(skin, "Wrote *$0*\n", path.to_string_lossy());
+                exported = true;
+            }
+            "f" => {
                 rr.list_staged_removals(&dup_report.dups, &skin);
             }
-            ('r', "Do the **r**emovals now") => {
+            "r" => {
                 rr.do_the_removal(&dup_report.dups, &skin)?;
                 break;
             }
-            ('q', "**Q**uit *backdown*, removing nothing") => {
+            "q" => {
                 break;
             }
-        });
+            _ => {} // should not happen
+        }
     }
     Ok(())
 }

@@ -88,6 +88,51 @@ backdown /some/directory
 backdown -i /some/directory
 ```
 
+## JSON report
+
+After the staging phase, you may decide to export a report as JSON. This doesn't prevent doing also the removals.
+
+The JSON looks like this:
+
+```JSON
+{
+  "dup_sets": [
+    {
+      "file_len": 1212746,
+      "files": {
+        "trav-copy/2006-05 (mai)/HPIM0530.JPG": "remove",
+        "trav-copy/2006-06 (juin)/HPIM0530 (another copy).JPG": "remove",
+        "trav-copy/2006-06 (juin)/HPIM0530 (copy).JPG": "remove",
+        "trav-copy/2006-06 (juin)/HPIM0530.JPG": "keep"
+      }
+    },
+    {
+      "file_len": 1980628,
+      "files": {
+        "trav-copy/2006-03 (mars)/HPIM0608.JPG": "keep",
+        "trav-copy/2006-05 (mai)/HPIM0608.JPG": "remove",
+        "trav-copy/2006-06 (juin)/HPIM0608.JPG": "keep"
+      }
+    },
+    {
+      "file_len": 1124764,
+      "files": {
+        "trav-copy/2006-05 (mai)/HPIM0529.JPG": "remove",
+        "trav-copy/2006-06 (juin)/HPIM0529.JPG": "keep"
+      }
+    },
+    {
+      "file_len": 1706672,
+      "files": {
+        "trav-copy/2006-05 (mai)/test.jpg": "remove",
+        "trav-copy/2006-06 (juin)/HPIM0598.JPG": "keep"
+      }
+    }
+  ],
+  "len_to_remove": 8450302
+}
+```
+
 # Advices
 
 * If you launch backdown on a big directory, it may find more duplicates you suspect there are. Don't force yourself to answer *all* questions at first: if you stage the removals of the first dozen questions you'll gain already a lot and you may do the other ones another day

@@ -38,6 +38,9 @@ pub fn ask_on_dirs<'d>(
         mad_print_inline!(
             skin,
             " -> currently staged: **$0** duplicate files for a removed size of **$1**\n",
+            // two following lines used for some screenshots so that I don't redo the staging
+            // 1042,
+            // "5.5G",
             rr.staged_removals.len(),
             file_size::fit_4(rr.len_to_remove),
         );
