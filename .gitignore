@@ -1,6 +1,5 @@
 /target
 /build
 /releases
-/trav
-/trav-copy
+/trav*
 *.zip

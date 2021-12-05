@@ -52,6 +52,8 @@ fn run_app() -> Result<()> {
         }
         question.add_answer('f', "Review all **f**iles staged for removal");
         question.add_answer('r', "Do the **r**emovals now");
+        #[cfg(unix)]
+        question.add_answer('l', "Replace removed files with **l**inks");
         question.add_answer('q', "**Q**uit *backdown*, removing nothing");
         match question.ask(&skin)?.as_ref() {
             "s" => {
@@ -68,6 +70,11 @@ fn run_app() -> Result<()> {
             }
             "r" => {
                 rr.do_the_removal(&dup_report.dups, &skin)?;
+                break;
+            }
+            "l" => {
+                #[cfg(unix)]
+                rr.replace_staged_with_links(&dup_report.dups, &skin)?;
                 break;
             }
             "q" => {

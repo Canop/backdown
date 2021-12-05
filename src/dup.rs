@@ -1,6 +1,9 @@
 use {
     lazy_regex::*,
-    std::path::{Path, PathBuf},
+    std::{
+        collections::HashSet,
+        path::{Path, PathBuf},
+    },
 };
 
 
@@ -12,7 +15,6 @@ pub struct DupFile {
 }
 
 /// the list of files having a hash
-/// TODO rename DupSet ?
 #[derive(Debug, Default)]
 pub struct DupSet {
     pub files: Vec<DupFile>, // identical files
@@ -32,6 +34,29 @@ impl DupFile {
             //staged_for_removal: false,
         }
     }
+}
+
+pub fn reference_file<'a, 'b>(
+    dup_set_idx: usize,
+    dup_set: &'a DupSet,
+    staged_removals: &'b HashSet<DupFileRef>,
+) -> Option<&'a Path> {
+    let mut best: Option<&Path> = None;
+    for (dup_file_idx, file) in dup_set.files.iter().enumerate() {
+        let path = &file.path;
+        let dup_file_ref = DupFileRef { dup_set_idx, dup_file_idx };
+        if staged_removals.contains(&dup_file_ref) {
+            continue;
+        }
+        if let Some(previous) = best {
+            if previous.to_string_lossy().len() > path.to_string_lossy().len() {
+                best = Some(path);
+            }
+        } else {
+            best = Some(path);
+        }
+    }
+    best
 }
 
 impl DupFileRef {

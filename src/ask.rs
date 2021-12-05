@@ -5,7 +5,7 @@ use {
     termimad::*,
 };
 
-const MAX_LISTED_FILES: usize = 3;
+const MAX_LISTED_FILES: usize = 5;
 
 pub fn ask_on_dirs<'d>(
     dirs_report: &'d DirsReport,

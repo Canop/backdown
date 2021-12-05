@@ -1,5 +1,10 @@
-### next
-- option to write the report in a JSON file after staging phase
+<a name="v1.1.0"></a>
+### v1.1.0 - 2021-12-05
+- option to replace staged files with symlinks (unix only) - Fix #2
+
+<a name="v1.0.1"></a>
+### v1.0.1 - 2021-12-05
+- option to write the report in a JSON file after staging phase - Fix #3
 
 <a name="v1.0.0"></a>
 ### v1.0.0 - 2021-10-02

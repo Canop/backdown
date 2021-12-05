@@ -1,6 +1,6 @@
 [package]
 name = "backdown"
-version = "1.0.1"
+version = "1.1.0"
 authors = ["Canop <cano.petrole@gmail.com>"]
 edition = "2018"
 description = "A smart CLI for removing thousands of duplicates on your disks"

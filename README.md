@@ -46,6 +46,8 @@ Review and Confirm:
 
 ![screen 5](doc/screen-5.png)
 
+At this point you may also export the report as JSON, and you may decide to replace each removed file with a link to one of the kept ones.
+
 # Installation
 
 ## From the crates.io repository

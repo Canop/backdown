@@ -73,23 +73,32 @@ impl<'d> Brotherhood<'d> {
 }
 
 impl<'d> DirPairKey<'d> {
-    pub fn new(a: &'d Path, b: &'d Path) -> Self {
+    pub fn new(a: &'d Path, b: &'d Path) -> (Self, bool) {
         if a.cmp(b) == Ordering::Less {
-            DirPairKey {
-                left_dir: a,
-                right_dir: b,
-            }
+            (
+                DirPairKey {
+                    left_dir: a,
+                    right_dir: b,
+                },
+                false
+            )
         } else {
-            DirPairKey {
-                left_dir: b,
-                right_dir: a,
-            }
+            (
+                DirPairKey {
+                    left_dir: b,
+                    right_dir: a,
+                },
+                true
+            )
         }
     }
 }
 
 impl<'d> DirPair<'d> {
-    pub fn new(key: DirPairKey<'d>, file_pairs: Vec<FilePair>) -> Self {
+    pub fn new(
+        key: DirPairKey<'d>,
+        file_pairs: Vec<FilePair>,
+    ) -> Self {
         Self { key, file_pairs }
     }
 }
@@ -103,27 +112,32 @@ impl<'d> DirsReport<'d> {
         let mut brotherhood_per_parent: FnvHashMap<&Path, Brotherhood<'d>> = FnvHashMap::default();
         for (dup_set_idx, dup) in dups.iter().enumerate() {
             brotherhood_per_parent.clear();
-            for (left_file_idx, a) in dup.files.iter().enumerate() {
+            for (a_file_idx, a) in dup.files.iter().enumerate() {
                 let a_parent = a.path.parent().unwrap();
                 // adding to the dir_map
                 dir_map.entry(a_parent)
                     .or_default()
-                    .push(DupFileRef { dup_set_idx, dup_file_idx: left_file_idx });
+                    .push(DupFileRef { dup_set_idx, dup_file_idx: a_file_idx });
 
                 // building dir pair
-                for right_file_idx in left_file_idx+1..dup.files.len() {
-                    let b = &dup.files[right_file_idx];
+                for b_file_idx in a_file_idx+1..dup.files.len() {
+                    let b = &dup.files[b_file_idx];
                     let b_parent = b.path.parent().unwrap();
-                    let dpk = DirPairKey::new(
+                    let (dpk, inverted) = DirPairKey::new(
                         a_parent,
                         b_parent,
                     );
-                    if dpk.left_dir == dpk.right_dir {
+                    let (left_file_idx, right_file_idx) = if inverted {
+                        (b_file_idx, a_file_idx)
+                    } else {
+                        (a_file_idx, b_file_idx)
+                    };
+                    if a_parent == b_parent {
                         // brotherhood
                         brotherhood_per_parent
-                            .entry(dpk.left_dir)
+                            .entry(a_parent)
                             .or_insert_with(|| Brotherhood {
-                                parent: dpk.left_dir,
+                                parent: a_parent,
                                 dup_set_idx,
                                 files: Vec::new(),
                                 is_auto_solvable: false,

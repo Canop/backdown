@@ -27,7 +27,7 @@ impl<'d> RemovalReport<'d> {
         self.len_to_remove += dups[dup_file_ref.dup_set_idx].file_len;
         self.dup_sets_with_staged.insert(dup_file_ref.dup_set_idx);
         self.staged_removals.insert(dup_file_ref);
-        //println!("staged {:?}", &dups[dup_file_ref.dup_set_idx].files[dup_file_ref.dup_file_idx].path);
+        // println!("staged {:?}", &dups[dup_file_ref.dup_set_idx].files[dup_file_ref.dup_file_idx].path);
     }
 
     pub fn is_empty(&self) -> bool {
@@ -156,6 +156,66 @@ impl<'d> RemovalReport<'d> {
         Ok(())
     }
 
+    #[cfg(unix)]
+    pub fn replace_staged_with_links(
+        &self,
+        dups: &[DupSet],
+        skin: &MadSkin,
+    ) -> anyhow::Result<()> {
+        use std::os::unix::fs::symlink;
+        self.check_no_emptied_set(dups)?;
+        skin.print_text("\n# Phase 4) Replace staged duplicates with links");
+        println!("Replacing...");
+        let mut removed_len = 0;
+        let mut removed_count = 0;
+        // file removals
+        for dup_file_ref in &self.staged_removals {
+            let dup_set = &dups[dup_file_ref.dup_set_idx];
+            let path = dup_file_ref.path(dups);
+            let link_destination = match reference_file(dup_file_ref.dup_set_idx, dup_set, &self.staged_removals) {
+                Some(p) => p,
+                None => {
+                    anyhow::bail!("unexpected lack of kept file in dup set");
+                }
+            };
+            let link_destination = link_destination.canonicalize()?;
+            match fs::remove_file(path) {
+                Ok(()) => {
+                    removed_count += 1;
+                    removed_len += dups[dup_file_ref.dup_set_idx].file_len;
+                    match symlink(&link_destination, path) {
+                        Ok(()) => {
+                            // println!("link {:?} -> {:?}", path, link_destination);
+                        }
+                        Err(e) => {
+                            mad_print_inline!(
+                                skin,
+                                " Failed to remove create link *$1* -> *$2* : $3\n",
+                                path.to_string_lossy(),
+                                link_destination.to_string_lossy(),
+                                e,
+                            );
+                        }
+                    }
+                }
+                Err(e) => {
+                    mad_print_inline!(
+                        skin,
+                        " Failed to remove *$1* : $2\n",
+                        path.to_string_lossy(),
+                        e,
+                    );
+                }
+            }
+        }
+        mad_print_inline!(
+            skin,
+            "Removed *$0* files with a total size of **$1**\n",
+            removed_count,
+            file_size::fit_4(removed_len),
+        );
+        Ok(())
+    }
 
     pub fn do_the_removal(
         &self,
