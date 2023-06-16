@@ -36,10 +36,10 @@ impl DupFile {
     }
 }
 
-pub fn reference_file<'a, 'b>(
+pub fn reference_file<'a>(
     dup_set_idx: usize,
     dup_set: &'a DupSet,
-    staged_removals: &'b HashSet<DupFileRef>,
+    staged_removals: &HashSet<DupFileRef>,
 ) -> Option<&'a Path> {
     let mut best: Option<&Path> = None;
     for (dup_file_idx, file) in dup_set.files.iter().enumerate() {

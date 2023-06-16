@@ -41,6 +41,6 @@ pub fn write_in_file(
     let path = available_path(name);
     let mut file = fs::File::create(&path)?;
     let json = serde_json::to_string_pretty(value)?;
-    write!(&mut file, "{}\n", json)?;
+    writeln!(&mut file, "{}", json)?;
     Ok(path)
 }
