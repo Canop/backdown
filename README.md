@@ -1,12 +1,15 @@
 # backdown
 
-[![MIT][s2]][l2] [![Latest Version][s1]][l1] [![Chat on Miaou][s4]][l4]
+[![MIT][s2]][l2] [![Latest Version][s1]][l1] [![Build][s3]][l3] [![Chat on Miaou][s4]][l4]
 
 [s1]: https://img.shields.io/crates/v/backdown.svg
 [l1]: https://crates.io/crates/backdown
 
 [s2]: https://img.shields.io/badge/license-MIT-blue.svg
 [l2]: LICENSE
+
+[s3]: https://github.com/Canop/backdown/actions/workflows/rust.yml/badge.svg
+[l3]: https://github.com/Canop/backdown/actions/workflows/rust.yml
 
 [s4]: https://miaou.dystroy.org/static/shields/room.svg
 [l4]: https://miaou.dystroy.org/3768?Rust
