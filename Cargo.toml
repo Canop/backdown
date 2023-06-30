@@ -32,3 +32,6 @@ strip = true
 [patch.crates-io]
 #minimad = { path = "../minimad" }
 #termimad = { path = "../termimad" }
+
+[profile.release]
+strip = true
