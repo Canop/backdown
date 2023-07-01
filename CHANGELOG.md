@@ -1,3 +1,8 @@
+<a name="v1.1.1"></a>
+### v1.1.1 - 2023-07-01
+- updated dependencies
+- stripped binary (smaller)
+
 <a name="v1.1.0"></a>
 ### v1.1.0 - 2021-12-05
 - option to replace staged files with symlinks (unix only) - Fix #2

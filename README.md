@@ -60,7 +60,7 @@ You must have the Rust env installed: https://rustup.rs
 Run
 
 ```bash
-cargo install backdown
+cargo install --locked backdown
 ```
 
 ## From Source

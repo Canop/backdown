@@ -1,5 +1,6 @@
 /target
 /build
+/pub
 /releases
 /trav*
 *.zip
