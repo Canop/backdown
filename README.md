@@ -75,7 +75,7 @@ cargo install --path .
 
 ## Precompiled binaries
 
-Unless you're a Rust developper, I recommend you just download the precompiled binaries, as this will save a lot of space on your disk.
+Unless you're a Rust developer, I recommend you just download the precompiled binaries, as this will save a lot of space on your disk.
 
 Binaries are made available at https://dystroy.org/backdown/download/
 

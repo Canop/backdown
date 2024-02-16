@@ -335,7 +335,7 @@ ${removable_files
 |-:
 "#;
 
-/// asking the question when left dir and right dir are differents
+/// asking the question when left dir and right dir are different
 fn ask_on_dir_pair(
     question_idx: usize,
     questions: usize,
