@@ -285,11 +285,16 @@ fn ask_on_brotherhood(
         .set("size", file_size::fit_4(dup_set.file_len));
     skin.print_owning_expander(&expander, &TextTemplate::from(MD_BROTHERHOOD));
     let mut q = Question::new("What do you want to do with these duplicates?");
-    for (i, &f) in brotherhood.files.iter().enumerate() {
-        let file_name = &dup_set.files[f].path.file_name().unwrap();
+
+    struct F<'f> { idx: usize, name: &'f str }
+    let mut candidates: Vec<F> = brotherhood.files.iter()
+        .map(|&idx| F{ idx, name: dup_set.files[idx].path.file_name().unwrap().to_str().unwrap() })
+        .collect();
+    candidates.sort_by(|a, b| a.name.cmp(b.name));
+    for (i, f) in candidates.iter().enumerate() {
         q.add_answer(
-            i+1,
-            format!("keep *{}* and stage other one(s) for removal", file_name.to_string_lossy()),
+            i + 1,
+            format!("keep *{}* and stage other one(s) for removal", f.name),
         );
     }
     q.add_answer('s', "**S**kip and go to next question");
@@ -299,13 +304,13 @@ fn ask_on_brotherhood(
         "s" => {}
         "e" => { rr.broken = true; }
         a => {
-            if let Ok(idx) = a.parse::<usize>() {
-                if idx == 0 {
+            if let Ok(a) = a.parse::<usize>() {
+                if a == 0 {
                     println!("Options start at 1 - skipping");
                 } else {
-                    let idx = idx - 1;
+                    let chosen = &candidates[a - 1];
                     for i in 0..brotherhood.files.len() {
-                        if i != idx {
+                        if i != chosen.idx {
                             rr.stage_file(brotherhood.file_ref(i), dups);
                         }
                     }
