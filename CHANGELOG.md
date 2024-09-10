@@ -1,3 +1,7 @@
+<a name="v1.1.2"></a>
+### v1.1.2 - 2024-09-10
+- sort files by name - Thanks @nc7s
+
 <a name="v1.1.1"></a>
 ### v1.1.1 - 2023-07-01
 - updated dependencies
