@@ -74,7 +74,6 @@ dependencies = [
  "chrono",
  "cli-log",
  "crossbeam",
- "crossterm",
  "file-size",
  "fnv",
  "lazy-regex",

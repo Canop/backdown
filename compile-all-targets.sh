@@ -15,6 +15,7 @@ echo "   build cleaned"
 
 # build the linux version
 echo -e "${H2}Compiling the linux version${EH}"
+cargo clean
 cargo build --release
 strip target/release/backdown
 mkdir build/x86_64-linux/
@@ -22,6 +23,7 @@ cp target/release/backdown build/x86_64-linux/
 
 # build a musl version
 echo -e "${H2}Compiling the MUSL version${EH}"
+cargo clean
 cross build --release --target x86_64-unknown-linux-musl
 mkdir build/x86_64-unknown-linux-musl
 cp target/x86_64-unknown-linux-musl/release/backdown build/x86_64-unknown-linux-musl
@@ -29,6 +31,7 @@ cp target/x86_64-unknown-linux-musl/release/backdown build/x86_64-unknown-linux-
 # build the windows version
 # use cargo cross
 echo -e "${H2}Compiling the Windows version${EH}"
+cargo clean
 cross build --target x86_64-pc-windows-gnu --release
 mkdir build/x86_64-pc-windows-gnu
 cp target/x86_64-pc-windows-gnu/release/backdown.exe build/x86_64-pc-windows-gnu/
